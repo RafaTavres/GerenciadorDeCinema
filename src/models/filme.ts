@@ -5,4 +5,5 @@ export class Filme{
     video: boolean;
     poster:string;
     vote_count:number;
+    genres:number[];
 }

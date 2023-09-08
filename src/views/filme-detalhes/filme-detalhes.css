@@ -9,3 +9,9 @@ body{
         rgba(31,30,30,1) 76%
     );
 }
+
+
+.botao-favorito:hover {
+    opacity: 0.9;
+    cursor: pointer;
+}

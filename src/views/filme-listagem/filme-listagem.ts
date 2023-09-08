@@ -1,27 +1,69 @@
 import { Filme } from '../../models/filme';
 import { FilmeService } from '../../services/filme.service';
+import { LocalStorageService } from '../../services/local-storage.service';
 import './filme-listagem.css';
 
-
 class Tela{
-    container: HTMLDivElement;
+
     filmesEmAlta:HTMLDivElement;
+    filmesEmAltaLink:HTMLLinkElement;
+
+    filmesTopRated:HTMLDivElement;
+    filmesTopRatedLink: HTMLLinkElement;
+
+    filmesNoCinema:HTMLDivElement;
+    filmesNoCinemaLink: HTMLLinkElement;
+
+    filmesFavoritos:HTMLDivElement;
+    filmesFavoritosLink: HTMLLinkElement;
+
+    filmesPorVir:HTMLDivElement;
+    filmesPorVirLink: HTMLLinkElement;
+
+
     filmeService: FilmeService;
+    localStorageService: LocalStorageService;
+
+   
 
     constructor() {
 
+        this.localStorageService = new LocalStorageService();
         this.registrarElementos();
         this.registrarEventos();
-        this.filmeService = new FilmeService();
-        this.filmeService.selecionarFilmes().then(filmes => this.gerarGridFilmes(filmes));
-            
+        this.filmeService = new FilmeService(this.localStorageService.carregarDados());
+        this.filmesNoCinemaLink.click();
     }
 
     registrarElementos():void{
+     
         this.filmesEmAlta = document.getElementById('filmesEmAlta') as HTMLDivElement;
+        this.filmesEmAltaLink = document.getElementById('filmesEmAltaLink') as HTMLLinkElement;
+
+        this.filmesTopRated = document.getElementById('filmesTopRated') as HTMLDivElement;
+        this.filmesTopRatedLink = document.getElementById('filmesTopRatedLink') as HTMLLinkElement;
+
+        this.filmesPorVir = document.getElementById('filmesPorVir') as HTMLDivElement;
+        this.filmesPorVirLink = document.getElementById('filmesPorVirLink') as HTMLLinkElement;
+
+        this.filmesNoCinema = document.getElementById('filmesNoCinema') as HTMLDivElement;
+        this.filmesNoCinemaLink = document.getElementById('filmesNoCinemaLink') as HTMLLinkElement;
+
+        
+        this.filmesFavoritos = document.getElementById('filmesFavoritos') as HTMLDivElement;
+        this.filmesFavoritosLink = document.getElementById('filmesFavoritosLink') as HTMLLinkElement;
     }
 
     registrarEventos(): void{
+        this.filmesEmAltaLink.addEventListener('click', (e) => this.filmeService.selecionarFilmesPopulares().then(filmes => this.gerarGridFilmes(e,filmes,this.filmesEmAlta)));
+
+        this.filmesTopRatedLink.addEventListener('click', (e) => this.filmeService.selecionarFilmesTopRated().then(filmes => this.gerarGridFilmes(e,filmes,this.filmesTopRated)));
+
+        this.filmesPorVirLink.addEventListener('click', (e) => this.filmeService.selecionarFilmesPorVir().then(filmes => this.gerarGridFilmes(e,filmes,this.filmesPorVir)));
+
+        this.filmesNoCinemaLink.addEventListener('click', (e) => this.filmeService.selecionarFilmesNoCinema().then(filmes => this.gerarGridFilmes(e,filmes,this.filmesNoCinema)));
+
+        this.filmesFavoritosLink.addEventListener('click', (e) => this.gerarGridFilmes(e,this.filmeService.selecionarFavoritos(),this.filmesFavoritos));
     }
 
     buscar(titulo:string):void{
@@ -38,13 +80,30 @@ class Tela{
         window.location.href = `detalhes.html?titulo=${nome}`;
     }
 
-    private gerarGridFilmes(filmes: Filme[]): any {
+    private gerarGridFilmes(sender: Event, filmes: Filme[],div:HTMLDivElement): any {
+        let linkClicado = sender.target as HTMLLinkElement;
+        let divsFilmes = document.getElementsByClassName("divFilmes");
+        let titulosFilmes:HTMLCollectionOf<HTMLLinkElement> = document.getElementsByClassName("titulosPrincipais") as HTMLCollectionOf<HTMLLinkElement>;
+        
+        if(filmes.length == 0){
+            console.log("ERRO");
+            this.exibirNotificacao(new Error("Sem Filmes Encontrados"));
+        }
+        for(let div of divsFilmes){
+            div.innerHTML = '';
+        }
+
+        for(let titulo of titulosFilmes){
+            titulo.innerText = '→' + titulo.innerText.slice(1);
+        }
 
         for(let filme of filmes){
+            linkClicado.innerText = '↓' + linkClicado.innerText.slice(1);
             const card = this.obterCard(filme);
-            this.filmesEmAlta.appendChild(card);
+            div.appendChild(card);
         }    
     }
+
 
     private obterCard(filme: Filme) {
 
@@ -71,6 +130,23 @@ class Tela{
 
             return cardFilme;
     }
+
+    private exibirNotificacao(error: Error): void{
+        const notificacao = document.createElement('div');
+
+        notificacao.textContent = error.message;
+        notificacao.classList.add('notificacao');
+
+        notificacao.addEventListener('click', (sender: Event) =>{(sender.target as HTMLElement).remove()})
+
+        document.body.appendChild(notificacao);
+
+        setTimeout(() => {
+            notificacao.remove();
+        }, 3000);
+
+    }
+
 
 }
 window.addEventListener('load', () => new Tela());

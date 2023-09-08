@@ -1,10 +1,25 @@
 import { API_KEY } from "../../secrets";
+import { HistoricoFavoritos } from "../models/favoritos";
 import { Filme } from "../models/filme";
 import { Generos } from "../models/generos";
 import { Video } from "../models/video";
 
 export class FilmeService{
 
+    private _historico: HistoricoFavoritos;
+  
+    get historico(): HistoricoFavoritos {
+      return this._historico;
+    }
+  
+    set historico(novo: HistoricoFavoritos) {
+      this._historico = novo;
+    }
+
+    constructor(historico: HistoricoFavoritos) { 
+        this._historico = historico;
+    }
+    
     BuscarVideo(id: number) {
         const url = `https://api.themoviedb.org/3/movie/${id}/videos`;
 
@@ -12,15 +27,13 @@ export class FilmeService{
          .then((res: Response): Promise<any> => this.processarResposta(res))
          .then((obj: any): Video => this.mapearVideo(obj.results))
     }
-    
-    BuscarListaDeGeneros():string[]{
-        let listaDeGeneros:string[] = [];
-        fetch('https://api.themoviedb.org/3/genre/movie/list?language=en', this.ObterHeaderDeAutorizacao())
-        .then(response => response.json())
-        .then(response => listaDeGeneros.push(response))
-        .catch(err => console.error(err));
 
-        return listaDeGeneros;
+    registrarFavorito(filme:Filme): void {
+        this._historico.filmes.push(filme);
+    }
+    
+    removerFavorito(filme:Filme): void {
+        this._historico.filmes.pop();
     }
 
     selecionarFilmePorTitulo(titulo:string): Promise<Filme>{
@@ -31,12 +44,122 @@ export class FilmeService{
          .then((obj: any): Filme => this.mapearFilme(obj.results))
     }  
 
-    selecionarFilmes(): Promise<Filme[]>{
+    selecionarGeneros(): any[]{
+        
+        return[
+              {
+                "id": 28,
+                "name": "Ação"
+              },
+              {
+                "id": 12,
+                "name": "Aventura"
+              },
+              {
+                "id": 16,
+                "name": "Animação"
+              },
+              {
+                "id": 35,
+                "name": "Comédia"
+              },
+              {
+                "id": 80,
+                "name": "Crime"
+              },
+              {
+                "id": 99,
+                "name": "Documentário"
+              },
+              {
+                "id": 18,
+                "name": "Drama"
+              },
+              {
+                "id": 10751,
+                "name": "Família"
+              },
+              {
+                "id": 14,
+                "name": "Fantasia"
+              },
+              {
+                "id": 36,
+                "name": "História"
+              },
+              {
+                "id": 27,
+                "name": "Terror"
+              },
+              {
+                "id": 10402,
+                "name": "Música"
+              },
+              {
+                "id": 9648,
+                "name": "Mistério"
+              },
+              {
+                "id": 10749,
+                "name": "Romance"
+              },
+              {
+                "id": 878,
+                "name": "Ficção científica"
+              },
+              {
+                "id": 10770,
+                "name": "Cinema TV"
+              },
+              {
+                "id": 53,
+                "name": "Thriller"
+              },
+              {
+                "id": 10752,
+                "name": "Guerra"
+              },
+              {
+                "id": 37,
+                "name": "Faroeste"
+              }
+        ]
+    }
+
+    selecionarFilmesPopulares(): Promise<Filme[]>{
         const url = `https://api.themoviedb.org/3/movie/popular?language=pt-BR`;
 
         return fetch(url,this.ObterHeaderDeAutorizacao())
         .then((res) => this.processarResposta(res))
         .then((obj) => this.mapearListaFilme(obj.results));
+    }
+
+    selecionarFilmesTopRated(): Promise<Filme[]>{
+        const url = `https://api.themoviedb.org/3/movie/top_rated?language=pt-BR`;
+
+        return fetch(url,this.ObterHeaderDeAutorizacao())
+        .then((res) => this.processarResposta(res))
+        .then((obj) => this.mapearListaFilme(obj.results));
+    }
+
+    selecionarFilmesPorVir(): Promise<Filme[]>{
+        const url = `https://api.themoviedb.org/3/movie/upcoming?language=pt-BR`;
+
+        return fetch(url,this.ObterHeaderDeAutorizacao())
+        .then((res) => this.processarResposta(res))
+        .then((obj) => this.mapearListaFilme(obj.results));
+    }
+
+    selecionarFilmesNoCinema(): Promise<Filme[]>{
+        const url = `https://api.themoviedb.org/3/movie/now_playing?language=pt-BR`;
+
+        return fetch(url,this.ObterHeaderDeAutorizacao())
+        .then((res) => this.processarResposta(res))
+        .then((obj) => this.mapearListaFilme(obj.results));
+    }
+
+    selecionarFavoritos(): Filme[]{
+       return this.historico.filmes;
     }
 
     private processarResposta(res: Response): Promise<any>{
@@ -59,14 +182,6 @@ export class FilmeService{
         return new Video();
     }
 
-    private mapearGeneros(obj: any): Generos{
-        let m = {
-            id:obj[0].id,
-            name: obj[0].name
-        };
-        console.log(m)
-        return m;   
-    }
 
     private mapearFilme(obj: any): Filme{  
         let m = {
@@ -75,13 +190,14 @@ export class FilmeService{
             overview:obj[0].overview,
             video: obj[0].video,
             poster: obj[0].poster_path,
-            vote_count: obj[0].vote_count
+            vote_count: obj[0].vote_count,
+            genres: obj[0].genre_ids
         };
-        console.log(m)
         return m;
     }
 
     private mapearListaFilme(objs: any[]):Promise<Filme[]>{
+       
         const listaDeFilme = objs.map(obj =>{
            return this.selecionarFilmePorTitulo(obj.title)
         });
@@ -89,6 +205,8 @@ export class FilmeService{
        
         return Promise.all(listaDeFilme);
     }
+
+   
 
     private ObterHeaderDeAutorizacao(){
         return {
