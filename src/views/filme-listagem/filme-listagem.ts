@@ -5,6 +5,7 @@ import './filme-listagem.css';
 
 class Tela{
     container: HTMLDivElement;
+    filmesEmAlta:HTMLDivElement;
     filmeService: FilmeService;
 
     constructor() {
@@ -17,23 +18,32 @@ class Tela{
     }
 
     registrarElementos():void{
-        this.container = document.getElementById('container') as HTMLDivElement;
+        this.filmesEmAlta = document.getElementById('filmesEmAlta') as HTMLDivElement;
     }
 
     registrarEventos(): void{
     }
 
+    buscar(titulo:string):void{
+        this.pesquisarFilmePorTitulo(titulo);
+    }
+
+    private pesquisarFilmePorTitulo(titulo: string) : void{
+        this.filmeService.selecionarFilmePorTitulo(titulo)
+        .then(filme => this.redirecionarUsuario(filme.title))
+        .catch((error: Error) => console.log(error));
+    }
+
+    private redirecionarUsuario(nome: string): any {
+        window.location.href = `detalhes.html?titulo=${nome}`;
+    }
 
     private gerarGridFilmes(filmes: Filme[]): any {
-        let filmesEmAlta:HTMLDivElement = document.createElement("div");
-        filmesEmAlta.innerHTML = `<div class="row"></div>`;
 
         for(let filme of filmes){
             const card = this.obterCard(filme);
-            filmesEmAlta.appendChild(card);
-        }
-
-        this.container.appendChild(filmesEmAlta);
+            this.filmesEmAlta.appendChild(card);
+        }    
     }
 
     private obterCard(filme: Filme) {
@@ -46,20 +56,21 @@ class Tela{
 
 
             const cardFilme = document.createElement('div');
-            cardFilme.classList.add('card-filme');
+            cardFilme.classList.add('col-6','col-md-4', 'col-lg-2');
 
-            cardFilme.addEventListener('click',() => {window.location.href = `detalhes.html?nome=${filme.title}`})
+            cardFilme.addEventListener('click',() => this.buscar(filme.title))
 
             cardFilme.innerHTML = `
-            <div class="col-6 col-md-4 col-lg-2">
                 <div class="d-grid gap-2 text-center">
                 <img
                     src="https://image.tmdb.org/t/p/w500/${filme.poster}"
                     class="img-fluid rounded-3"/>
                     <a href="" class="fs-5 link-warning text-decoration-none">${filme.title}</a>
                 </div>
-            </div>`;
+            `;
+
             return cardFilme;
     }
+
 }
 window.addEventListener('load', () => new Tela());
