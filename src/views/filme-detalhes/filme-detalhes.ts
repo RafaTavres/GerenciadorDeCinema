@@ -36,7 +36,14 @@ class DetalhesFilmes{
         
         const pnlFIlme = document.createElement("div");
         let chave = "";
-        this.filmeService.BuscarVideo(filme.id).then(video => chave = video.key);
+        this.filmeService.BuscarVideo(filme.id).then(video => 
+            {
+                if(video.key != null)
+                    chave = `https://www.youtube.com/embed/${video.key}?si=IaFskl1A5pV1uf6Z&amp;controls=video.key`;
+                else
+                    chave = `https://www.youtube.com/embed/DFaVayiluIw?si=IaFskl1A5pV1uf6Z&amp;controls=video.key`;
+            }
+            );
         let lista = this.filmeService.BuscarListaDeGeneros();
             console.log(lista);
             for(let r of lista){
@@ -74,7 +81,7 @@ class DetalhesFilmes{
                         <iframe
                         class="rounded-3"
                         id="iframeTrailer"
-                        src="https://www.youtube.com/embed/${chave}?si=IaFskl1A5pV1uf6Z&amp;controls="
+                        src="${chave}"
                         frameborder="0"
                         allowfullscreen
                         ></iframe>

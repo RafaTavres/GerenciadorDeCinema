@@ -48,11 +48,15 @@ export class FilmeService{
     }
 
     private mapearVideo(obj: any): Video{
-        let m = {
-            key: obj[0].key
-        };
-        console.log(m)
-        return m;
+        try{
+            let m = {
+                key: obj[0].key
+            };
+            return m;
+        }catch(Error){
+            console.log(Error);
+        }
+        return new Video();
     }
 
     private mapearGeneros(obj: any): Generos{
