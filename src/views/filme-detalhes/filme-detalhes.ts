@@ -1,3 +1,5 @@
+import { Cast } from "../../models/cast";
+import { Credito } from "../../models/credito";
 import { HistoricoFavoritos } from "../../models/favoritos";
 import { Filme } from "../../models/filme";
 import { Generos } from "../../models/generos";
@@ -40,7 +42,7 @@ class DetalhesFilmes{
 
 
     private gerarCard(filme: Filme):void{
-        
+      
         const pnlFIlme = document.createElement("div");
         let chave = "";
         this.filmeService.BuscarVideo(filme.id).then(video => 
@@ -51,11 +53,17 @@ class DetalhesFilmes{
                     chave = `https://www.youtube.com/embed/DFaVayiluIw?si=IaFskl1A5pV1uf6Z&amp;controls=video.key`;
             }
             );
+        let listaDeAtores:any[] = [];
+        let listaDeDiretores:any[] = [];
+        let listaDeEscritores:any[] = [];
 
         let listageneros = this.pegarGenerosDoFilmes(filme);
-
+        this.filmeService.selecionarCreditoDoFilme(filme).then(credito => listaDeAtores = this.pegarListaDosCreditos(credito.cast,'Acting'));
+        this.filmeService.selecionarCreditoDoFilme(filme).then(credito => listaDeDiretores = this.pegarListaDosCreditos(credito.crew,'Directing'));
+        this.filmeService.selecionarCreditoDoFilme(filme).then(credito => listaDeEscritores = this.pegarListaDosCreditos(credito.crew,'Writing'));
         let Iconfavorito = "bi-heart";
 
+         
         for(let film of this.filmeService.selecionarFavoritos()){
            if(filme.title == film.title){
             Iconfavorito = "bi-heart-fill";
@@ -104,7 +112,21 @@ class DetalhesFilmes{
                 <p class="fs-5 text-light">
                     ${filme.overview}
                 </p>
-            </div>`;
+            </div>
+
+            </div>
+
+            
+
+            <nav class="navbar lista-creditos">
+            </nav>
+
+            <nav class="navbar lista-creditos">
+            </nav>
+
+            <nav class="navbar  lista-creditos">       
+            </nav>
+            `;
 
         setTimeout(() => {
             let divGeneros = document.getElementById("generos");
@@ -115,7 +137,55 @@ class DetalhesFilmes{
                 divGeneros?.appendChild(spanGenero);
             } 
         },500);
-        
+
+        setTimeout(() => {
+            let listasCreditos = document.getElementsByClassName("lista-creditos");
+            for(let i = 0; i < 3; i++){
+
+                if(i == 0){
+                    let container = document.createElement('div');
+                    container.classList.add("container");
+                    container.innerHTML = `
+                    <p class="text-light fs-4 fw-bold">Diretor(es):</p>`;
+                    for(let diretor of listaDeDiretores){
+                       let p = document.createElement('p');
+                       p.classList.add("text-light","fw-bold");
+                       p.innerText = ` ${diretor}, `;
+                       container.appendChild(p);
+                    }
+                    listasCreditos[i]?.appendChild(container);
+                   
+                }
+                if(i == 1){
+                    let container = document.createElement('div');
+                    container.classList.add("container");
+                    container.innerHTML = `
+                    <p class="text-light fs-4 fw-bold">Escritores:</p>`;
+                    for(let escritor of listaDeEscritores){
+                        let p = document.createElement('p');
+                        p.classList.add("text-light","fw-bold");
+                        p.innerText = ` ${escritor}, `;
+                        container.appendChild(p);
+                     }
+                     listasCreditos[i]?.appendChild(container);
+                }
+                if(i == 2){
+                    let container = document.createElement('div');
+                    container.classList.add("container");
+                    container.innerHTML = `
+                    <p class="text-light fs-4 fw-bold">Atores:</p>`;
+                    for(let ator of listaDeAtores){
+                        let p = document.createElement('p');
+                        p.classList.add("text-light","fw-bold");
+                        p.innerText = ` ${ator}, `;
+                        container.appendChild(p);
+                     }
+                     listasCreditos[i]?.appendChild(container);
+                }
+            } 
+        },500);
+
+      
         setTimeout(() => {
             let botaoFavorito = document.getElementById("botaoFavorito");
             botaoFavorito?.addEventListener('click', (e) => this.favoritarFilme(e,filme));
@@ -124,6 +194,19 @@ class DetalhesFilmes{
         this.container.appendChild(pnlFIlme);
         }, 1000);
      
+    }
+    pegarListaDosCreditos(credito: Cast[], tipo: string): any[] {
+        let list:any[] = [];
+
+        for(let cast of credito){
+            if(!list.includes(cast.name)){
+                if(cast.known_for_department == tipo){
+                    list.push(cast.name);
+                }
+            }             
+        }
+        console.log(list);
+        return list;
     }
 
     private favoritarFilme(event: Event,filme:Filme): any {

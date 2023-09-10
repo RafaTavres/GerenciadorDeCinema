@@ -1,4 +1,5 @@
 import { API_KEY } from "../../secrets";
+import { Credito } from "../models/credito";
 import { HistoricoFavoritos } from "../models/favoritos";
 import { Filme } from "../models/filme";
 import { Generos } from "../models/generos";
@@ -42,6 +43,14 @@ export class FilmeService{
          return fetch(url,this.ObterHeaderDeAutorizacao())
          .then((res: Response): Promise<any> => this.processarResposta(res))
          .then((obj: any): Filme => this.mapearFilme(obj.results))
+    } 
+
+    selecionarCreditoDoFilme(filme:Filme): Promise<Credito>{
+      const url = `https://api.themoviedb.org/3/movie/${filme.id}/credits?language=pt-BR`;
+
+      return fetch(url, this.ObterHeaderDeAutorizacao())
+      .then(response => this.processarResposta(response))
+      .then(response => this.mapearCredito(response));
     }  
 
     selecionarGeneros(): any[]{
@@ -195,6 +204,14 @@ export class FilmeService{
         };
         return m;
     }
+
+    private mapearCredito(obj: any): Credito{  
+      let m = {
+          cast: obj.cast,
+          crew: obj.crew
+      };
+      return m;
+  }
 
     private mapearListaFilme(objs: any[]):Promise<Filme[]>{
        
