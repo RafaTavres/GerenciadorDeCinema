@@ -33,8 +33,13 @@ export class FilmeService{
         this._historico.filmes.push(filme);
     }
     
-    removerFavorito(filme:Filme): void {
-        this._historico.filmes.pop();
+    removerFavorito(filme:Filme): void {   
+        for(let film of this.selecionarFavoritos()){
+          if(filme.title == film.title){
+            console.log(this.selecionarFavoritos().indexOf(film));
+            this._historico.filmes.splice(this.selecionarFavoritos().indexOf(film),1);
+          }
+        }
     }
 
     selecionarFilmePorTitulo(titulo:string): Promise<Filme>{
